@@ -1,0 +1,22 @@
+{
+  "name": "talks",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "themes/*"
+  ],
+  "scripts": {
+    "dev": "slidev taloscon2026-talos-containers/slides.md --bind 127.0.0.1",
+    "build": "slidev build taloscon2026-talos-containers/slides.md",
+    "export": "slidev export taloscon2026-talos-containers/slides.md --output taloscon2026-talos-containers/slides.pdf",
+    "dev:reconciling": "slidev taloscon2026-never-stops-reconciling/slides.md --bind 127.0.0.1",
+    "theme:dev": "slidev themes/taloscon2026/example.md",
+    "theme:build": "slidev build themes/taloscon2026/example.md",
+    "theme:export": "slidev export themes/taloscon2026/example.md",
+    "build:site": "sh scripts/build-site.sh"
+  },
+  "devDependencies": {
+    "@slidev/cli": "^53.0.0",
+    "playwright-chromium": "^1.63.0"
+  }
+}

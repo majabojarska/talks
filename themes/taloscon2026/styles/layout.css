@@ -1,0 +1,384 @@
+/*
+ * Geometry is taken 1:1 from the TalosCon 2026 master deck (720x405pt),
+ * mapped onto a 960x540 canvas: 1pt = 4/3px. Google Slides text boxes have
+ * a 0.1in horizontal / 0.05in vertical inset, folded into the offsets below.
+ */
+
+:root {
+  --tc-pink: #e92582;
+  --tc-purple: #723a8b;
+  --tc-blue: #074c94;
+  --tc-teal: #2d848f;
+  --tc-green: #5bbf8a;
+  --tc-gradient: linear-gradient(90deg, #e82c81 0%, #723a8b 33%, #074c94 66%, #5bbf8a 100%);
+
+  --tc-ink: #000000;
+  --tc-muted: #595959;
+
+  --tc-font: 'Manrope Variable', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --tc-font-mono: 'JetBrains Mono Variable', 'JetBrains Mono', ui-monospace, monospace;
+
+  --slidev-theme-primary: var(--tc-teal);
+  --slidev-code-font-family: var(--tc-font-mono);
+  --slidev-code-font-size: 16px;
+  --slidev-code-line-height: 24px;
+  --slidev-code-padding: 12px 16px;
+}
+
+.slidev-layout.tc-frame {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  overflow: hidden;
+  font-family: var(--tc-font);
+  font-size: 24px; /* 18pt body */
+  line-height: 1.15;
+}
+
+.slidev-layout.tc-frame code,
+.slidev-layout.tc-frame pre {
+  font-family: var(--tc-font-mono);
+}
+
+/* ---------- light content slides ---------- */
+
+.slidev-layout.tc-light {
+  background: #ffffff;
+  color: var(--tc-ink);
+}
+
+.tc-header-icon {
+  position: absolute;
+  left: 41px;
+  top: 31px;
+  width: 29px;
+  height: 33px;
+  object-fit: contain;
+}
+
+.tc-header-wordmark {
+  position: absolute;
+  left: 81px;
+  top: 41px;
+  width: 253px;
+  height: 12px;
+}
+
+/* title box 33,63 895x60; body box 33,137 895x359 */
+.tc-content {
+  position: absolute;
+  left: 43px;
+  right: 42px;
+  top: 68px;
+  bottom: 49px;
+  display: flex;
+  flex-direction: column;
+}
+
+.tc-light h1 {
+  flex: none;
+  margin: 0 0 29px;
+  font-size: 37px; /* 28pt */
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.tc-light h2 {
+  font-size: 29px;
+  font-weight: 600;
+  margin: 0 0 12px;
+}
+
+.tc-light h3 {
+  font-size: 24px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+
+.tc-frame p {
+  margin: 0 0 16px;
+  line-height: 1.15;
+}
+
+.tc-frame ul,
+.tc-frame ol {
+  margin: 0 0 16px;
+  padding-left: 1.2em;
+}
+
+.tc-frame ul {
+  list-style: disc;
+}
+
+.tc-frame li {
+  line-height: 1.15;
+  margin: 0 0 10px;
+}
+
+.tc-frame li > ul,
+.tc-frame li > ol {
+  margin: 10px 0 0;
+  font-size: 0.85em;
+}
+
+.tc-frame a {
+  color: var(--tc-teal);
+  text-decoration: none;
+  border-bottom: 1px solid currentColor;
+}
+
+.tc-light :not(pre) > code {
+  font-size: 0.85em;
+  padding: 0.1em 0.3em;
+  border-radius: 4px;
+  background: #eeeeee;
+}
+
+.tc-light .slidev-code-wrapper {
+  margin: 0 0 16px;
+}
+
+.tc-frame table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 20px;
+  line-height: 1.25;
+}
+
+.tc-frame th,
+.tc-frame td {
+  padding: 10px 16px 10px 0;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid #dddddd;
+}
+
+.tc-frame th {
+  font-weight: 700;
+  border-bottom: 2px solid var(--tc-ink);
+}
+
+.tc-frame td:first-child {
+  font-weight: 600;
+}
+
+.tc-frame td:not(:last-child) {
+  white-space: nowrap;
+}
+
+/* rows revealed with v-click must not leave their rules behind */
+.tc-frame tr.slidev-vclick-hidden > * {
+  border-color: transparent;
+}
+
+/* inline speaker aside, e.g. a punchline revealed on click */
+.tc-note {
+  margin-left: 0.5em;
+  color: var(--tc-pink);
+  font-style: italic;
+  font-weight: 500;
+}
+
+.tc-center {
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+/* two columns: 33,121 420x359 and 507,121 420x359, 14pt text */
+.tc-two-cols {
+  display: grid;
+  grid-template-columns: 401px 401px;
+  grid-template-rows: auto 1fr;
+  column-gap: 73px;
+  align-content: start;
+  font-size: 19px;
+}
+
+.tc-cols-header {
+  grid-column: 1 / -1;
+}
+
+.tc-two-cols .tc-col {
+  grid-row: 2;
+  min-height: 0;
+}
+
+.tc-two-cols .tc-col-left {
+  grid-column: 1;
+}
+
+.tc-two-cols .tc-col-right {
+  grid-column: 2;
+}
+
+.tc-two-cols:not(:has(.tc-cols-header)) .tc-col {
+  grid-row: 1 / -1;
+}
+
+.tc-image {
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+/* ---------- dark slides (cover, section, end) ---------- */
+
+.slidev-layout.tc-dark {
+  background-color: #0b0b0b;
+  background-size: cover;
+  background-position: center;
+  color: #ffffff;
+}
+
+.tc-logo {
+  position: absolute;
+  left: 49px;
+  top: 43px;
+  width: 329px;
+  height: 93px;
+}
+
+/* title box 33,142 895x215 (bottom-anchored), subtitle box 33,362 895x83 */
+.tc-cover {
+  position: absolute;
+  left: 43px;
+  right: 42px;
+  top: 147px;
+  display: grid;
+  grid-template-rows: 205px;
+  grid-auto-rows: min-content;
+}
+
+.tc-cover h1 {
+  align-self: end;
+  margin: 0;
+  font-size: 69px; /* 52pt */
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.tc-cover h1 + * {
+  margin-top: 15px;
+}
+
+.tc-cover > :not(h1) {
+  margin-bottom: 0;
+  font-size: 37px; /* 28pt */
+  line-height: 1.15;
+}
+
+.tc-cover > :not(h1) + :not(h1) {
+  margin-top: 8px;
+  font-size: 24px;
+}
+
+/* section title box 33,226 895x88, 36pt */
+.tc-section {
+  position: absolute;
+  left: 62px;
+  right: 42px;
+  top: 186px;
+  bottom: 60px;
+}
+
+.tc-section h1 {
+  margin: 0 0 20px;
+  font-size: 48px; /* 36pt */
+  font-weight: 600;
+  line-height: 1.15;
+}
+
+.tc-section p {
+  font-size: 24px;
+  opacity: 0.85;
+}
+
+/* "Thank you" box 52,186 880x71, Manrope ExtraBold 32pt */
+.tc-end {
+  position: absolute;
+  left: 62px;
+  right: 42px;
+  top: 191px;
+}
+
+.tc-end h1 {
+  margin: 0;
+  font-size: 43px;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+/* contacts row at y=329: label at x=52, columns at x=178, 420, ... */
+.tc-contacts {
+  position: absolute;
+  left: 62px;
+  right: 42px;
+  top: 334px;
+  display: grid;
+  grid-template-columns: 126px repeat(auto-fill, 242px);
+  font-size: 11px; /* 8pt */
+  line-height: 1.3;
+}
+
+.tc-contacts-label {
+  font-weight: 700;
+}
+
+.tc-contact {
+  font-weight: 600;
+}
+
+.tc-contact a {
+  color: inherit;
+  border-bottom: none;
+}
+
+/* ---------- footer (all slides) ---------- */
+
+/* 26,490 245x32, Manrope 8pt, vertically centered */
+.tc-footer {
+  position: absolute;
+  left: 36px;
+  top: 490px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.tc-footer-sep {
+  margin: 0 12px;
+}
+
+/* 889,490 58x41, 10pt, right-aligned */
+.tc-slide-number {
+  position: absolute;
+  right: 23px;
+  top: 490px;
+  height: 41px;
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  color: var(--tc-muted);
+}
+
+.tc-bar {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 16px;
+}
+
+/* ---------- full: edge-to-edge content above the gradient bar ---------- */
+
+.tc-full-content {
+  position: absolute;
+  inset: 12px 12px 26px;
+  display: flex;
+  flex-direction: column;
+}
