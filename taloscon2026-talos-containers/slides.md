@@ -282,24 +282,33 @@ Click 1 — ConfigController takes the document and produces a ContainerSpec. It
 effects at all: it validates, applies defaults, resolves names. A pure function of the machine
 config, so everything downstream works against a fully resolved spec.
 
-Click 2 — three things now resolve independently. ImageController pulls the image into the
-taloscontainers namespace — in its own goroutine, because a pull retries with backoff for up
-to twenty minutes and doing that inline would stall every other container. MountController
-resolves the mounts and takes out volume mount requests. And the dependsOn gate is evaluated:
-paths, network readiness, clock sync, other containers. The pull does not wait for the gate;
-the gate does not wait for the pull.
+Click 2 — two things now resolve independently, each in a controller of its own.
+ImageController pulls the image into the taloscontainers namespace — in its own goroutine,
+because a pull retries with backoff for up to twenty minutes and doing that inline would stall
+every other container. MountController resolves the mounts and takes out volume mount
+requests. Neither waits for the other.
 
-Click 3 — InstanceController waits for all three, then creates a ContainerInstanceSpec. Note
-what that resource is: one execution, carrying a fully resolved snapshot — the image digest,
-not the tag, and the concrete resolved mount sources. Its ID is the container name plus a
-generation number.
+Click 3 — InstanceController is where it all comes together. It waits on those two statuses
+and evaluates the dependsOn gates itself — paths, network readiness, clock sync, other
+containers — and writes two resources. One is the ContainerInstanceSpec: one execution,
+carrying a fully resolved snapshot, the image digest rather than the tag and the concrete
+resolved mount sources. Its ID is the container name plus a generation number. The other is
+the gate verdict, ContainerDependencyStatus, published so that nothing downstream has to
+re-derive the same answer from the same inputs.
 
-Click 4 — RuntimeController is the only thing in the system that talks to containerd. The
-existence of an instance resource is the instruction to run; its destruction is the
-instruction to stop.
+Click 4 — RuntimeController is the only thing that creates and runs containerd tasks.
+ImageController holds a containerd client of its own, for pulls, but nothing else in the
+feature starts anything. The existence of an instance resource is the instruction to run; its
+destruction is the instruction to stop. It then sits on the task — literally blocked on
+task.Wait, no polling and no event subscription — and writes what it sees into
+ContainerInstanceStatus: phase, PID, exit code. The containerd task itself is a side effect
+nothing can read; that resource is the only thing it leaves behind.
 
-Click 5 — StatusController aggregates it all into the ContainerStatus you actually read:
-pending, pulling, starting, running, exited, backoff, stopping — plus what it's waiting for.
+Click 5 — StatusController aggregates it all into the ContainerStatus you actually read. It
+is a pure fold with no side effects of its own: the spec, the image status, the gate verdict,
+the instance spec and the instance status in, one resource out — pending, pulling, starting,
+running, exited, backoff, stopping, plus what it's waiting for. That waitingFor list is the
+gate verdict from click 3, which is why it is worth publishing as a resource.
 
 -->
 
