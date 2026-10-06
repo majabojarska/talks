@@ -11,14 +11,6 @@ Maja Bojarska
 
 Senior Software Engineer @ Sidero Labs
 
-<!--
-
-Hello, I'm Maja Bojarska, a Senior Software Engineer at Sidero Labs.
-Today I want to talk about running containers on Talos — without Kubernetes,
-and without rebuilding the OS image.
-
--->
-
 ---
 
 # About me
@@ -38,7 +30,7 @@ Senior Software Engineer @ Sidero Labs
   <!--<figure>
     <img src="/krasnal-lappek.jpg" alt="A Wrocław gnome statue pushing a cable reel">
   </figure>-->
-  <figure>
+  <figure>https://docs.siderolabs.com/talos/v1.14/networking/host-dns#host-dns
     <img src="/krasnal.jpg" alt="A Wrocław gnome statue playing a saxophone">
   </figure>
   <figure class="cat">
@@ -89,52 +81,11 @@ TODO: Fill this out once the remaining slides are ready
 </v-clicks>
 
 
-<!--
-
-Talos has always been able to run containers — it is, after all, an OS whose entire job is
-running containers. But until now there were exactly two ways to do it, and they sit at
-opposite extremes.
-
--->
-
 ---
 clicks: 15
 ---
 
 <TalosStack />
-
-<!--
-
-This is the diagram the whole talk hangs off. Build it up slowly.
-
-Click 1 — a Talos node is a Linux kernel and, above it, the CRI containerd instance. That is
-already running on every Talos node, whether or not you ever asked for it.
-
-Click 2 — the `k8s.io` namespace: Kubernetes lives on that instance.
-Click 3 — kubelet talks to it.
-Click 4 — pods land here.
-Click 5 — the catch: this needs the Kubernetes control plane.
-
-Click 6 — and here's the thing people often don't realise: Talos runs a *second* containerd.
-The system instance, on its own socket.
-Click 7 — with its own `system` namespace.
-Click 8 — Talos' own services live there.
-Click 9 — and so do extension services.
-Click 10 — their root filesystems are extracted from the OS image at /usr/local/lib/containers —
-which is the important detail two slides from now.
-
-Click 11 — the new one: the `taloscontainers` namespace, on the CRI instance.
-Click 12 — your containers.
-Click 13 — image pulled at runtime.
-
-Click 14 — each gets its own cgroup root, so they can't starve each other. The taloscontainers
-root carries a CPU weight but deliberately no memory reservation — these are user workloads,
-not a reserved system component.
-
-Click 15 — the punchline. We did not add a third runtime. We added a namespace to a containerd
-that was already running. That's why the feature costs essentially nothing in memory.
-
--->
 
 ---
 layout: two-cols-header
@@ -251,12 +202,6 @@ after alpha.0. Check which release is current on the day.
 ---
 
 # `ContainerConfig`
-
-<!--
-
-Let's look at what you actually write.
-
--->
 
 ---
 layout: two-cols-header
