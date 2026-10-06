@@ -3,19 +3,26 @@ import { computed } from 'vue'
 import { useSlideContext } from '@slidev/client'
 
 import {
+  CAPTION_X,
+  R,
   CHIP_H,
   CHIP_Y,
   COL_H,
   COL_Y,
   CONTAINERD_H,
   CONTAINERD_Y,
+  CONTENT_W,
+  GUTTER,
   ITEM_H,
   KERNEL_H,
   KERNEL_Y,
   PUNCH_Y,
-  CHIPS_AT,
   PUNCH_AT,
   W,
+  captions,
+  chipAt,
+  chipW,
+  chipX,
   columns,
   daemons,
   itemAt,
@@ -24,15 +31,18 @@ import {
   noteY,
 } from './stack'
 
-// Driven by the slide's click counter; the slide sets `clicks: 15`.
+// Driven by the slide's click counter; the slide sets `clicks: 17`.
+// Each namespace is finished off by its own cgroup roots before the next one starts.
 //   0      the Linux kernel
 //   1      the CRI containerd instance
 //   2-5    k8s.io: box, kubelet, pods, note
-//   6      the system containerd instance
-//   7-10   system: box, two items, note
-//   11-13  taloscontainers: box, item, note
-//   14     cgroup roots
-//   15     punchline
+//   6      k8s.io cgroup roots (and the "cgroups" caption, the first of the row)
+//   7      the system containerd instance
+//   8-11   system: box, two items, note
+//   12     system cgroup roots
+//   13-15  taloscontainers: box, item, note
+//   16     taloscontainers cgroup roots
+//   17     punchline
 const { $clicks } = useSlideContext()
 const s = computed(() => $clicks.value)
 </script>
@@ -42,14 +52,14 @@ const s = computed(() => $clicks.value)
     <svg class="ts-svg" :viewBox="`-4 0 ${W + 8} 356`" aria-label="Talos container stack: kernel, two containerd instances, and their namespaces">
       <!-- The one band everything sits on. -->
       <g class="ts-band on">
-        <rect :x="0" :y="KERNEL_Y" :width="W" :height="KERNEL_H" rx="6" class="ts-kernel" />
-        <text :x="W / 2" :y="KERNEL_Y + KERNEL_H / 2 + 5" text-anchor="middle" class="ts-band-label">Linux kernel</text>
+        <rect :x="GUTTER" :y="KERNEL_Y" :width="CONTENT_W" :height="KERNEL_H" :rx="R" class="ts-kernel" />
+        <text :x="GUTTER + CONTENT_W / 2" :y="KERNEL_Y + KERNEL_H / 2 + 5" text-anchor="middle" class="ts-band-label">Linux kernel</text>
       </g>
 
       <!-- Two containerd daemons, not one. -->
       <g v-for="d in daemons" :key="d.label" class="ts-band" :class="{ on: s >= d.at }">
         <rect
-          :x="d.x" :y="CONTAINERD_Y" :width="d.w" :height="CONTAINERD_H" rx="6"
+          :x="d.x" :y="CONTAINERD_Y" :width="d.w" :height="CONTAINERD_H" :rx="R"
           class="ts-containerd" :class="{ accent: d.accent }"
         />
         <text :x="d.x + d.w / 2" :y="CONTAINERD_Y + CONTAINERD_H / 2 + 5" text-anchor="middle" class="ts-band-label">
@@ -60,7 +70,7 @@ const s = computed(() => $clicks.value)
       <!-- One column per containerd namespace, sitting over its own daemon. -->
       <g v-for="c in columns" :key="c.ns" class="ts-col" :class="{ on: s >= c.at }">
         <rect
-          :x="c.x" :y="COL_Y" :width="c.w" :height="COL_H" rx="8"
+          :x="c.x" :y="COL_Y" :width="c.w" :height="COL_H" :rx="R"
           class="ts-col-box" :style="{ stroke: c.color }"
         />
         <text :x="c.x + c.w / 2" :y="COL_Y + 20" text-anchor="middle" class="ts-ns" :style="{ fill: c.color }">
@@ -69,7 +79,7 @@ const s = computed(() => $clicks.value)
 
         <g v-for="(item, j) in c.items" :key="item" class="ts-reveal" :class="{ on: s >= itemAt(c, j) }">
           <rect
-            :x="c.x + 16" :y="itemY(j)" :width="c.w - 32" :height="ITEM_H" rx="6"
+            :x="c.x + 16" :y="itemY(j)" :width="c.w - 32" :height="ITEM_H" :rx="R"
             class="ts-item" :style="{ stroke: c.color }"
           />
           <text :x="c.x + c.w / 2" :y="itemY(j) + ITEM_H / 2 + 5" text-anchor="middle" class="ts-item-label">
@@ -84,20 +94,36 @@ const s = computed(() => $clicks.value)
         >{{ line }}</text>
       </g>
 
-      <!-- cgroup roots, revealed together so the partition reads as one row. -->
-      <g class="ts-chips" :class="{ on: s >= CHIPS_AT }">
-        <g v-for="c in columns" :key="c.ns">
-          <rect
-            :x="c.x" :y="CHIP_Y" :width="c.w" :height="CHIP_H" rx="13"
-            class="ts-chip" :style="{ stroke: c.color }"
-          />
-          <text :x="c.x + c.w / 2" :y="CHIP_Y + CHIP_H / 2 + 5" text-anchor="middle" class="ts-chip-label" :style="{ fill: c.color }">
-            {{ c.cgroup }}
-          </text>
+      <!-- cgroup roots, revealed per namespace: each column's roots land right after its note. -->
+      <g>
+        <g v-for="c in columns" :key="c.ns" class="ts-reveal" :class="{ on: s >= chipAt(c) }">
+          <g v-for="(root, i) in c.cgroup" :key="root">
+            <rect
+              :x="chipX(c, i)" :y="CHIP_Y" :width="chipW(c)" :height="CHIP_H" :rx="R"
+              class="ts-chip" :style="{ stroke: c.color }"
+            />
+            <text
+              :x="chipX(c, i) + chipW(c) / 2" :y="CHIP_Y + CHIP_H / 2 + 5"
+              text-anchor="middle" class="ts-chip-label" :style="{ fill: c.color }"
+            >{{ root }}</text>
+          </g>
         </g>
       </g>
 
-      <!-- <text :x="W / 2" :y="PUNCH_Y" text-anchor="middle" class="ts-punch" :class="{ on: s >= PUNCH_AT }">
+      <!-- Row captions in the left gutter, reading bottom-to-top. -->
+      <g
+        v-for="cap in captions" :key="cap.label"
+        class="ts-reveal" :class="{ on: s >= cap.at }"
+      >
+        <text
+          :x="CAPTION_X" :y="cap.y"
+          :transform="`rotate(-90 ${CAPTION_X} ${cap.y})`"
+          text-anchor="middle" dominant-baseline="middle"
+          class="ts-caption"
+        >{{ cap.label }}</text>
+      </g>
+
+      <!-- <text :x="GUTTER + CONTENT_W / 2" :y="PUNCH_Y" text-anchor="middle" class="ts-punch" :class="{ on: s >= PUNCH_AT }">
         No new runtime — one more namespace on the containerd that was already there.
       </text> -->
     </svg>
@@ -113,7 +139,6 @@ const s = computed(() => $clicks.value)
 .ts-band,
 .ts-col,
 .ts-reveal,
-.ts-chips,
 .ts-punch {
   opacity: 0;
   transition: opacity 0.4s ease;
@@ -122,7 +147,6 @@ const s = computed(() => $clicks.value)
 .ts-band.on,
 .ts-col.on,
 .ts-reveal.on,
-.ts-chips.on,
 .ts-punch.on {
   opacity: 1;
 }
@@ -189,6 +213,15 @@ const s = computed(() => $clicks.value)
 .ts-chip-label {
   font-family: var(--tc-font-mono);
   font-size: 12px;
+}
+
+.ts-caption {
+  font-family: var(--tc-font);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  fill: var(--tc-muted);
 }
 
 .ts-punch {

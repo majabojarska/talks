@@ -27,10 +27,7 @@ Senior Software Engineer @ Sidero Labs
 </div>
 
 <div class="about-pics">
-  <!--<figure>
-    <img src="/krasnal-lappek.jpg" alt="A Wrocław gnome statue pushing a cable reel">
-  </figure>-->
-  <figure>https://docs.siderolabs.com/talos/v1.14/networking/host-dns#host-dns
+  <figure>
     <img src="/krasnal.jpg" alt="A Wrocław gnome statue playing a saxophone">
   </figure>
   <figure class="cat">
@@ -82,7 +79,7 @@ TODO: Fill this out once the remaining slides are ready
 
 
 ---
-clicks: 15
+clicks: 17
 ---
 
 <TalosStack />
@@ -264,12 +261,6 @@ else on the node. Mirrors, auth, TLS, and the image cache all apply unchanged.
 
 -->
 
----
-layout: section
----
-
-# How it reconciles
-
 <!--
 
 Now the part I find most interesting: what Talos does with that document.
@@ -316,7 +307,7 @@ pending, pulling, starting, running, exited, backoff, stopping — plus what it'
 clicks: 5
 ---
 
-# Replacement and teardown
+# Container replacement
 
 <ContainerLifecycle />
 

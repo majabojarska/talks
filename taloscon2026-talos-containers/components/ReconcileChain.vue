@@ -25,9 +25,9 @@ const rows = { config: 2, spec: 52, fan: 125, instance: 214, running: 264, statu
 // The three statuses that resolve before an execution can be built. The dependency verdict is
 // produced by InstanceController itself, not a controller of its own.
 const fan = [
-  { x: 30, type: 'ContainerImageStatus', note: 'ImageController — pull + digest' },
-  { x: 310, type: 'ContainerMountStatus', note: 'MountController — volume mounts' },
-  { x: 590, type: 'ContainerDependencyStatus', note: 'the dependsOn gate' },
+  { x: 30, type: 'ContainerImageStatus', note: 'containers.ImageController (pull, digest)' },
+  { x: 310, type: 'ContainerMountStatus', note: 'containers.MountController' },
+  { x: 590, type: 'ContainerDependencyStatus', note: '(dependsOn gates)' },
 ]
 const FAN_W = 260
 

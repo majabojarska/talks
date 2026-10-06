@@ -27,7 +27,7 @@ const holders = ['containers.MountController', 'containers.RuntimeController']
       <!-- Generation 1: running, then wound down. -->
       <g class="cl-gen on" :class="{ gone: s >= 2 }">
         <rect :x="0" :y="26" width="340" height="46" rx="6" class="cl-bar cl-old" />
-        <text :x="170" :y="48" text-anchor="middle" class="cl-bar-label">omni-1</text>
+        <text :x="170" :y="48" text-anchor="middle" class="cl-bar-label">workload-1</text>
         <text :x="170" :y="64" text-anchor="middle" class="cl-bar-sub">running</text>
       </g>
       <text :x="170" :y="88" text-anchor="middle" class="cl-ann cl-ann-old" :class="{ on: s >= 2 }">
@@ -43,7 +43,7 @@ const holders = ['containers.MountController', 'containers.RuntimeController']
       <!-- Generation 2: created fully resolved, then takes over. -->
       <g class="cl-step" :class="{ on: s >= 1 }">
         <rect :x="396" :y="26" width="384" height="46" rx="6" class="cl-bar cl-new" :class="{ live: s >= 3 }" />
-        <text :x="588" :y="48" text-anchor="middle" class="cl-bar-label">omni-2</text>
+        <text :x="588" :y="48" text-anchor="middle" class="cl-bar-label">workload-2</text>
         <text :x="588" :y="64" text-anchor="middle" class="cl-bar-sub">{{ s >= 3 ? 'running' : 'image digest + mounts resolved' }}</text>
       </g>
 
@@ -51,28 +51,12 @@ const holders = ['containers.MountController', 'containers.RuntimeController']
       <g class="cl-step" :class="{ on: s >= 3 }">
         <text :x="0" :y="124" class="cl-row-label">log buffer</text>
         <rect :x="0" :y="136" width="780" height="34" rx="6" class="cl-log" />
-        <text :x="390" :y="158" text-anchor="middle" class="cl-log-label">taloscontainers-omni</text>
+        <text :x="390" :y="158" text-anchor="middle" class="cl-log-label">taloscontainers-workload</text>
         <text :x="0" :y="190" class="cl-note">
-          keyed by config name, not by instance — restart history reads as one continuous log
+            One continuous log, appended to by subsequent container instances.
         </text>
       </g>
 
-      <!-- Shutdown: the barrier carries no data, only finalizers. -->
-      <g class="cl-step" :class="{ on: s >= 4 }">
-        <rect :x="0" :y="216" width="460" height="96" rx="8" class="cl-barrier" />
-        <text :x="16" :y="240" class="cl-barrier-label">ContainerLifecycle</text>
-        <text :x="16" :y="258" class="cl-note">the shutdown barrier — the finalizer set is the payload</text>
-        <g v-for="(h, i) in holders" :key="h" class="cl-chip-g" :class="{ drained: s >= 5 }">
-          <rect :x="16 + i * 224" :y="270" width="212" height="28" rx="14" class="cl-chip" />
-          <text :x="16 + i * 224 + 106" :y="288" text-anchor="middle" class="cl-chip-label">{{ h }}</text>
-        </g>
-      </g>
-
-      <g class="cl-step" :class="{ on: s >= 5 }">
-        <path d="M476,264 L520,264" class="cl-arrow" />
-        <text :x="534" :y="256" class="cl-done">finalizers drained</text>
-        <text :x="534" :y="278" class="cl-note">only now do Talos services stop</text>
-      </g>
     </svg>
   </div>
 </template>
