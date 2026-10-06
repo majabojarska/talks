@@ -92,7 +92,7 @@ layout: two-cols-header
 
 ::left::
 
-### What you get
+### Benefits
 
 - Scheduling, restarts, rollouts
 - Secrets, ConfigMaps, Services
@@ -100,7 +100,7 @@ layout: two-cols-header
 
 ::right::
 
-### What you pay
+### Costs
 
 - A control plane on the node
 - etcd, a CNI, certificates to rotate
@@ -126,7 +126,7 @@ layout: two-cols-header
 
 ::left::
 
-### What you get
+### Benefits
 
 - Starts with the machine
 - Runs on the **system containerd**, beside Talos' own services
@@ -134,7 +134,7 @@ layout: two-cols-header
 
 ::right::
 
-### What you pay
+### Costs
 
 - Rootfs lives at `/usr/local/lib/containers`
 - **Baked into the OS image at build time**
@@ -351,41 +351,8 @@ would find containerd already gone.
 layout: section
 ---
 
-# Demo
+# Live demo
 
-Omni on a single Talos node
-
-<!--
-
-Let's do it live.
-
--->
-
----
-
-# Omni as a Talos container
-
-<div style="--slidev-code-font-size: 14px; --slidev-code-line-height: 20px">
-
-```yaml
-apiVersion: v1alpha1
-kind: ContainerConfig
-name: omni
-image: ghcr.io/siderolabs/omni:TODO
-network:
-  mode: host
-mounts:
-  - userVolume:
-      name: omni-data
-      destination: /_out
-security:
-  profile: privileged
-dependsOn:
-  networks: [addresses]
-  time: true
-```
-
-</div>
 
 <!--
 
@@ -411,7 +378,7 @@ contacts:
     email: maja.bojarska@siderolabs.com
 ---
 
-# Containers on Talos. No cluster required.
+# Containers on Talos. <br>No K8s required. 
 
 <!--
 
