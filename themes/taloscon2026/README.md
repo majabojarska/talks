@@ -26,7 +26,7 @@ Run `npm run theme:dev` from the repository root to preview `example.md`.
 | `image-left/right`| Title and body + image   | frontmatter `image:`, optional `backgroundSize:`         |
 | `section`         | Section header (dark)    | `# Title`, optional description                          |
 | `full`            | (none)                   | edge-to-edge content, only the gradient bar             |
-| `end`             | Thank you (dark)         | frontmatter `contacts: [{ name, role, email }]`; slot overrides "Thank you" |
+| `end`             | Thank you (dark)         | frontmatter `contacts: [{ name, role, email, slack }]`; slot overrides "Thank you" |
 
 Any slide can hide the page number with `slideNumber: false`.
 

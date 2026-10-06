@@ -106,6 +106,7 @@ contacts:
   - name: Jane Doe
     role: Principal Engineer
     email: jane@siderolabs.com
+    slack: taloscommunity.slack.com
   - name: John Doe
     role: Developer Advocate
     email: john@siderolabs.com

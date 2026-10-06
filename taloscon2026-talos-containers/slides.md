@@ -92,7 +92,7 @@ layout: two-cols-header
 
 ::left::
 
-### Benefits
+### Pros
 
 - Scheduling, restarts, rollouts
 - Secrets, ConfigMaps, Services
@@ -100,7 +100,7 @@ layout: two-cols-header
 
 ::right::
 
-### Costs
+### Cons
 
 - A control plane on the node
 - etcd, a CNI, certificates to rotate
@@ -126,7 +126,7 @@ layout: two-cols-header
 
 ::left::
 
-### Benefits
+### Pros
 
 - Starts with the machine
 - Runs on the **system containerd**, beside Talos' own services
@@ -134,7 +134,7 @@ layout: two-cols-header
 
 ::right::
 
-### Costs
+### Cons
 
 - Rootfs lives at `/usr/local/lib/containers`
 - **Baked into the OS image at build time**
@@ -238,30 +238,164 @@ dependsOn:
 
 </div>
 
+
+---
+
+# None of this is new
+
+<v-clicks>
+
+- Data lives in a **`UserVolumeConfig`** — the same volume machinery the rest of the node uses
+- The image comes through the **node's registry configuration** — mirrors, auth, TLS
+- Through the same **`ImageCacheConfig`**, so an air-gapped node stays air-gapped
+- Under the same **`ImageVerificationConfig`** — write a signature policy once, it covers these too
+
+</v-clicks>
+
 <!--
 
-The thing I'd highlight: raw OCI mounts are deliberately not exposed. Every mount source is
-typed, so Talos can reason about what a container is allowed to reach. `userVolume` is the one
-you want most of the time — it references a UserVolumeConfig by name, mounts from
-/var/mnt/<name>, and declaring it also makes the container wait for that volume.
+`ContainerConfig` adds one document, not a subsystem. The image pull goes through the same
+internal helper that fetches the kubelet image, the etcd image and the installer image, so
+everything already wired into that path applies here on day one, with nothing to opt into.
 
-`hostPath` exists, it's the widest of the three, and it's the only one that can reach
-arbitrary host state. Use it knowingly.
-
-`dependsOn.containers` is checked across documents when you apply the config: a dependency
-that doesn't resolve is rejected, and so is a cycle — otherwise two containers waiting on each
-other would boot the node into a state where both sit pending forever.
-
-Two sharp edges worth saying out loud. There are no user namespaces, so a container running as
-uid 0 is root on the host. And environment variables are stored in the machine config
-verbatim — treat them as being as sensitive as the machine config itself.
-
-If asked about registries: the image pull reuses the same registry configuration as everything
-else on the node. Mirrors, auth, TLS, and the image cache all apply unchanged.
+The next two slides are the same four documents with the YAML attached.
 
 -->
 
+---
+layout: two-cols-header
+---
+
+# Storage: `UserVolumeConfig`
+
+::left::
+
+```yaml
+apiVersion: v1alpha1
+kind: UserVolumeConfig
+name: app-data
+provisioning:
+  diskSelector:
+    match: disk.transport == "nvme"
+  maxSize: 50GiB
+filesystem:
+  type: xfs
+encryption:
+  provider: luks2
+  keys:
+    - slot: 0
+      tpm: {}
+```
+
+::right::
+
+```yaml
+apiVersion: v1alpha1
+kind: ContainerConfig
+name: app
+image: example.com/org/app:1.2.3
+mounts:
+  - userVolume:
+      name: app-data
+      destination: /var/lib/app
+```
+
+<style>
+.tc-content h1 {
+  margin-bottom: 16px;
+}
+.slidev-code {
+  --slidev-code-padding: 6px 16px;
+  padding: 6px 16px;
+}
+</style>
+
 <!--
+
+This is the `omni-data` volume the demo mounts, so this slide is also the setup for it.
+
+Nothing on the left is specific to containers. Encrypted, TPM-sealed, provisioned onto an NVMe
+disk by a CEL selector — that is just what user volumes already do, and a container referencing
+one inherits all of it. `volumeType` is omitted here because partition is the default.
+
+The ordering is the part worth saying out loud: declaring the mount is also declaring the
+dependency. The container does not start until the volume is mounted, and once it is running the
+volume can't be unmounted out from under it — the controller holds a finalizer for exactly that.
+
+One real limitation if it comes up: `userVolume` resolves `UserVolumeConfig` names only. An
+`ExistingVolumeConfig`, an `ExternalVolumeConfig` — NFS or virtiofs — or a `RawVolumeConfig`
+can't be named here. You can reach them through `hostPath` once they're mounted on the host, but
+you give up the ordering guarantee when you do.
+
+-->
+
+---
+layout: two-cols-header
+class: tc-wide-code
+---
+
+# Images: mirrors, cache, signatures
+
+::left::
+
+- `RegistryMirrorConfig` / `RegistryAuthConfig` / `RegistryTLSConfig` — the puller reads the node's registry configuration, like every other Talos image pull
+- `ImageCacheConfig` — once the cache is ready, registryd is injected as the **first mirror for every registry**
+- `ImageVerificationConfig` — cosign verification runs **before** the pull, and a verified image is re-pinned to its **digest**
+- A `deny` match is **terminal**: no retry, the container never starts
+
+::right::
+
+<div style="--slidev-code-font-size: 11px; --slidev-code-line-height: 15px">
+
+```yaml
+apiVersion: v1alpha1
+kind: RegistryMirrorConfig
+name: ghcr.io
+endpoints:
+  - url: https://harbor.lan/v2/ghcr
+    overridePath: true
+---
+apiVersion: v1alpha1
+kind: ImageCacheConfig
+local:
+  enabled: true
+---
+apiVersion: v1alpha1
+kind: ImageVerificationConfig
+rules:
+  - image: ghcr.io/siderolabs/*
+    keyless:
+      issuer: https://token.actions.githubusercontent.com
+      subjectRegex: ^https://github\.com/siderolabs/.*
+  - image: docker.io/*
+    deny: true
+```
+
+</div>
+
+<style>
+.slidev-code {
+  --slidev-code-padding: 6px 12px;
+  padding: 6px 12px;
+}
+</style>
+
+<!--
+
+Three documents, none of them written for this feature, all of them in force for it.
+
+The cache one is the nicest of the three: when the image cache is ready Talos prepends registryd
+as the first mirror endpoint for every registry, so a cached image is served locally and an
+air-gapped node stays air-gapped — the container config says nothing about any of this.
+
+Verification happens before the pull starts, not after. If a rule matches and the signature
+checks out, the pull is redirected to the digest, so what runs is exactly what was verified. If
+the rule denies, that's terminal — no retry, and the container never starts.
+
+Two details if asked. Patterns match on registry and repository only, against the normalized
+reference, so `docker.io/library/nginx*` matches `nginx:latest` while `library/nginx*` matches
+nothing. And the honest scope caveat: this covers Talos' own pulls — kubelet, etcd, installer,
+Talos Containers. Images that kubelet pulls through CRI for Kubernetes pods go around it.
 
 Now the part I find most interesting: what Talos does with that document.
 This is a COSI controller chain like everything else in Talos — nothing bespoke.
@@ -276,41 +410,6 @@ clicks: 5
 
 <ReconcileChain />
 
-<!--
-
-Click 1 — ConfigController takes the document and produces a ContainerSpec. It owns no side
-effects at all: it validates, applies defaults, resolves names. A pure function of the machine
-config, so everything downstream works against a fully resolved spec.
-
-Click 2 — two things now resolve independently, each in a controller of its own.
-ImageController pulls the image into the taloscontainers namespace — in its own goroutine,
-because a pull retries with backoff for up to twenty minutes and doing that inline would stall
-every other container. MountController resolves the mounts and takes out volume mount
-requests. Neither waits for the other.
-
-Click 3 — InstanceController is where it all comes together. It waits on those two statuses
-and evaluates the dependsOn gates itself — paths, network readiness, clock sync, other
-containers — and writes two resources. One is the ContainerInstanceSpec: one execution,
-carrying a fully resolved snapshot, the image digest rather than the tag and the concrete
-resolved mount sources. Its ID is the container name plus a generation number. The other is
-the gate verdict, ContainerDependencyStatus, published so that nothing downstream has to
-re-derive the same answer from the same inputs.
-
-Click 4 — RuntimeController is the only thing that creates and runs containerd tasks.
-ImageController holds a containerd client of its own, for pulls, but nothing else in the
-feature starts anything. The existence of an instance resource is the instruction to run; its
-destruction is the instruction to stop. It then sits on the task — literally blocked on
-task.Wait, no polling and no event subscription — and writes what it sees into
-ContainerInstanceStatus: phase, PID, exit code. The containerd task itself is a side effect
-nothing can read; that resource is the only thing it leaves behind.
-
-Click 5 — StatusController aggregates it all into the ContainerStatus you actually read. It
-is a pure fold with no side effects of its own: the spec, the image status, the gate verdict,
-the instance spec and the instance status in, one resource out — pending, pulling, starting,
-running, exited, backoff, stopping, plus what it's waiting for. That waitingFor list is the
-gate verdict from click 3, which is why it is worth publishing as a resource.
-
--->
 
 ---
 clicks: 5
@@ -320,33 +419,6 @@ clicks: 5
 
 <ContainerLifecycle />
 
-<!--
-
-Click 1 — you edit the config. Talos never mutates a running container. It builds the next
-generation: omni-2, with its own resolved digest and mounts. That's exactly why the instance
-carries a snapshot — so "is this still in sync with the spec?" is a comparison you can make.
-
-Click 2 — the old generation is wound down. A replacement is only created once the instance it
-replaces has been destroyed, so a container has at most one instance at a time. And if the
-replacement can't start yet, the old one keeps running while the status reports what it's
-waiting for.
-
-Click 3 — the new one takes over. Notice the log buffer: logs are keyed by config name, not by
-instance, so successive generations append to one buffer. Restart history reads as a single
-continuous log instead of fragmenting on every change.
-
-Click 4 — teardown. ContainerLifecycle is a shutdown barrier that carries no data at all — the
-finalizer set *is* the payload. Two controllers hold one: MountController, because its
-finalizers are what stop a volume being unmounted out from under a running container, and
-RuntimeController, because it owns the containerd tasks.
-
-Click 5 — the shutdown sequence blocks until that set is empty. There's a sequencer phase
-called stopContainers that runs before stopServices, and the ordering is load-bearing:
-stopServices is what stops the CRI containerd instance itself, so a barrier torn down after it
-would find containerd already gone.
-
--->
-
 ---
 layout: section
 ---
@@ -354,28 +426,13 @@ layout: section
 # Live demo
 
 
-<!--
-
-REPLACE THIS with the actual prepared Omni configuration before the talk — this is a
-structurally valid placeholder, not the real thing. It stays on the slide as a fallback so
-there is something to talk through if the live demo misbehaves.
-
-Demo beats:
-  - show the node has no Kubernetes running
-  - apply the config
-  - talosctl get containerstatus — watch it go pending, pulling, running
-  - talosctl logs --namespace taloscontainers omni
-  - hit the Omni UI
-  - if time allows: bump the image tag, show the generation increment and the continuous log
-
--->
-
 ---
 layout: end
 contacts:
   - name: Maja Bojarska
     role: Senior Software Engineer @ Sidero Labs
     email: maja.bojarska@siderolabs.com
+    slack: taloscommunity.slack.com
 ---
 
 # Containers on Talos. <br>No K8s required. 
