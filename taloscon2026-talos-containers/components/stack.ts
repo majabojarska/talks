@@ -4,6 +4,12 @@
 // services) and the CRI one (Kubernetes). Containers declared via ContainerConfig go on the
 // CRI instance, in their own namespace — which is the point the diagram has to make, so the
 // two daemons are drawn as separate bands and the namespace columns sit over the right one.
+//
+// One schedule, two slides. The click numbers below run unbroken from 0 to 17, but the deck cuts
+// them in half after the `system` column's cgroup roots (click 12): the first slide builds the
+// stack as it exists today, then Options 1 and 2 argue the case for a third namespace, and a
+// second mount of TalosStack resumes at click 12 (its `from` prop) to reveal `taloscontainers`.
+// Clicks 13-17, including PUNCH_AT, therefore belong to that second slide.
 
 export const W = 880;
 

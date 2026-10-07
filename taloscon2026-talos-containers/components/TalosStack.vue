@@ -31,7 +31,15 @@ import {
   noteY,
 } from './stack'
 
-// Driven by the slide's click counter; the slide sets `clicks: 17`.
+// The build is split across two slides, and `from` is the click the second one resumes at: the
+// component's own step counter is the slide's click counter plus that offset. Anything whose step
+// is at or below `from` mounts with its `on` class already set, so it is simply there on arrival
+// rather than fading in again.
+//
+// Slide one  — `clicks: 12`, no `from`      — steps 0-12: the stack as it exists today.
+// Slide two  — `clicks: 4`, `:from="12"`    — steps 13-16: taloscontainers, after Options 1 and 2
+//                                             have made the case for it.
+//
 // Each namespace is finished off by its own cgroup roots before the next one starts.
 //   0      the Linux kernel
 //   1      the CRI containerd instance
@@ -39,12 +47,14 @@ import {
 //   6      k8s.io cgroup roots (and the "cgroups" caption, the first of the row)
 //   7      the system containerd instance
 //   8-11   system: box, two items, note
-//   12     system cgroup roots
+//   12     system cgroup roots                        <- slide one ends here
 //   13-15  taloscontainers: box, item, note
 //   16     taloscontainers cgroup roots
 //   17     punchline
+const props = withDefaults(defineProps<{ from?: number }>(), { from: 0 })
+
 const { $clicks } = useSlideContext()
-const s = computed(() => $clicks.value)
+const s = computed(() => props.from + $clicks.value)
 </script>
 
 <template>

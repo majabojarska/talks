@@ -69,17 +69,10 @@ Senior Software Engineer @ Sidero Labs
 
 ---
 
-# Agenda
-
-TODO: Fill this out once the remaining slides are ready
-
-<v-clicks>
-
-</v-clicks>
 
 
 ---
-clicks: 17
+clicks: 12
 ---
 
 <TalosStack />
@@ -94,17 +87,17 @@ layout: two-cols-header
 
 ### Pros
 
+- The Kubernetes API, control loops
 - Scheduling, restarts, rollouts
 - Secrets, ConfigMaps, Services
-- The whole Kubernetes API
 
 ::right::
 
 ### Cons
 
-- A control plane on the node
-- etcd, a CNI, certificates to rotate
-- On a single-node appliance you are running **Kubernetes in order to run one container**
+- The usual challenges of K8s operations
+- Control plane consumes resources
+- Overkill for simple, non-HA deployments
 
 <!--
 
@@ -160,6 +153,12 @@ And note what ExtensionServiceConfig actually lets you configure: just config fi
 environment variables, for a service that is already baked in. It can't introduce a container.
 
 -->
+
+---
+clicks: 4
+---
+
+<TalosStack :from="12" />
 
 ---
 
