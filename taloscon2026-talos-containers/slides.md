@@ -191,7 +191,7 @@ clicks: 4
 ::left::
 
 
-- Talos 1.15 gets first class container support 
+- Talos 1.14 gets first class container support 
 
 <v-clicks>
 
@@ -452,56 +452,7 @@ The next two slides are the same four documents with the YAML attached.
 
 -->
 
----
-layout: two-cols-header
-class: tc-wide-code
----
 
-# Images: mirrors, cache, signatures
-
-::left::
-
-- `RegistryMirrorConfig` / `RegistryAuthConfig` / `RegistryTLSConfig` — the puller reads the node's registry configuration, like every other Talos image pull
-- `ImageCacheConfig` — once the cache is ready, registryd is injected as the **first mirror for every registry**
-- `ImageVerificationConfig` — cosign verification runs **before** the pull, and a verified image is re-pinned to its **digest**
-- A `deny` match is **terminal**: no retry, the container never starts
-
-::right::
-
-<div style="--slidev-code-font-size: 11px; --slidev-code-line-height: 15px">
-
-```yaml
-apiVersion: v1alpha1
-kind: RegistryMirrorConfig
-name: ghcr.io
-endpoints:
-  - url: https://harbor.lan/v2/ghcr
-    overridePath: true
----
-apiVersion: v1alpha1
-kind: ImageCacheConfig
-local:
-  enabled: true
----
-apiVersion: v1alpha1
-kind: ImageVerificationConfig
-rules:
-  - image: ghcr.io/siderolabs/*
-    keyless:
-      issuer: https://token.actions.githubusercontent.com
-      subjectRegex: ^https://github\.com/siderolabs/.*
-  - image: docker.io/*
-    deny: true
-```
-
-</div>
-
-<style>
-.slidev-code {
-  --slidev-code-padding: 6px 12px;
-  padding: 6px 12px;
-}
-</style>
 
 <!--
 
