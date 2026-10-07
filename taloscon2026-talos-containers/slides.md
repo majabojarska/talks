@@ -85,31 +85,28 @@ layout: two-cols-header
 
 ::left::
 
+<div v-click>
+
 ### Pros
 
-- The Kubernetes API, control loops
-- Scheduling, restarts, rollouts
-- Secrets, ConfigMaps, Services
+- The Kubernetes ecosystem
+- Portability
+- Health probes, rollbacks
+- Granular access control
+
+</div>
 
 ::right::
+
+<div v-click>
 
 ### Cons
 
 - The usual challenges of K8s operations
-- Control plane consumes resources
+- Control plane resource consumption
 - Overkill for simple, non-HA deployments
 
-<!--
-
-Nobody is arguing against Kubernetes here. If you already run a cluster, run your workload
-on the cluster.
-
-The problem is the cases where you don't benefit from it. A single node at the edge. An
-appliance. A box whose entire job is to run one long-lived process. There you are paying for
-the full machinery — etcd, a CNI, certificate rotation — and getting back scheduling
-decisions you don't need, because there is only one place anything can be scheduled.
-
--->
+</div>
 
 ---
 layout: two-cols-header
@@ -119,20 +116,50 @@ layout: two-cols-header
 
 ::left::
 
+<div v-click>
+
 ### Pros
 
-- Starts with the machine
-- Runs on the **system containerd**, beside Talos' own services
-- A real Talos service, registered as `ext-<name>`
+- Perfectly good for drivers and system daemons
+
+</div>
+
+<div v-click>
+
+<img
+  src="/image-factory-system-extensions.png"
+  alt="The Image Factory system extension picker, with libvirtd ticked"
+  class="ext-shot"
+/>
+
+</div>
 
 ::right::
 
+<div v-click>
+
 ### Cons
 
-- Rootfs lives at `/usr/local/lib/containers`
 - **Baked into the OS image at build time**
+- In-memory containerd snapshots
 - Always privileged — all grantable capabilities, all devices, host network
-- A new one means a new installer image, an upgrade, and a reboot
+- Can't reconfigure without rebuild and upgrade
+
+</div>
+
+<style>
+/* Landscape screenshot, 1425x736. The 401px column is the binding constraint, so it is
+   sized by width and lands ~207px tall — well inside the 350px the body box leaves
+   below the title. */
+.ext-shot {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 16px;
+  border-radius: 6px;
+  border: 1px solid var(--tc-muted);
+}
+</style>
 
 <!--
 
@@ -166,12 +193,11 @@ clicks: 4
 
 <v-clicks>
 
-- Apply a `ContainerConfig` document — the container starts **immediately**. No image rebuild, no reboot
+- Managed via `ContainerConfig` documents 
+- Introduced in Talos 1.14+, works out of the box
 - Runs on the **CRI containerd instance that is already there**, in its own `taloscontainers` namespace
 - Its own **cgroup root**, so it cannot starve Kubernetes or Talos itself
 - `restricted` by default: no capabilities, no devices, read-only rootfs and sysfs
-- Not a Talos service — it won't appear in `talosctl services`. Status comes back as `ContainerStatus`
-- Restarted automatically **5 seconds** after it stops
 
 </v-clicks>
 
