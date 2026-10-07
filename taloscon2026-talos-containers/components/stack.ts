@@ -5,11 +5,14 @@
 // CRI instance, in their own namespace — which is the point the diagram has to make, so the
 // two daemons are drawn as separate bands and the namespace columns sit over the right one.
 //
-// One schedule, two slides. The click numbers below run unbroken from 0 to 17, but the deck cuts
-// them in half after the `system` column's cgroup roots (click 12): the first slide builds the
-// stack as it exists today, then Options 1 and 2 argue the case for a third namespace, and a
-// second mount of TalosStack resumes at click 12 (its `from` prop) to reveal `taloscontainers`.
-// Clicks 13-17, including PUNCH_AT, therefore belong to that second slide.
+// One schedule, two slides. The click numbers below run unbroken from 0 to 13, but the deck cuts
+// them after the `system` column's cgroup roots (click 12): the first slide builds the stack as
+// it exists today, then Options 1 and 2 argue the case for a third namespace, and a second mount
+// of TalosStack resumes at click 12 (its `from` prop) to reveal `taloscontainers`.
+//
+// That reveal is a single click. The two existing namespaces are built a piece at a time because
+// the audience is being taught where the pieces live; `taloscontainers` is the answer the talk
+// has been withholding, so it arrives whole — see `atOnce` below.
 
 export const W = 880;
 
@@ -61,6 +64,8 @@ export interface Column {
   color: string;
   /** Click index at which the namespace box appears; items and note follow, one click each. */
   at: number;
+  /** Reveal the whole column — items, note and cgroup roots — on `at`, as one step. */
+  atOnce?: boolean;
 }
 
 export const columns: Column[] = [
@@ -93,6 +98,7 @@ export const columns: Column[] = [
     cgroup: ["taloscontainers/<id>"],
     color: "#e92582", // --tc-pink
     at: 13,
+    atOnce: true,
   },
 ];
 
@@ -120,17 +126,17 @@ export function noteY(itemCount: number, k: number): number {
 
 /** Click at which item j of a column appears. */
 export function itemAt(c: Column, j: number): number {
-  return c.at + 1 + j;
+  return c.atOnce ? c.at : c.at + 1 + j;
 }
 
 /** Click at which a column's note appears, after its last item. */
 export function noteAt(c: Column): number {
-  return c.at + 1 + c.items.length;
+  return c.atOnce ? c.at : c.at + 1 + c.items.length;
 }
 
 /** Click at which a column's cgroup chips appear, one step after its note. */
 export function chipAt(c: Column): number {
-  return noteAt(c) + 1;
+  return c.atOnce ? c.at : noteAt(c) + 1;
 }
 
 /** Gap between two cgroup chips sharing one column. */
@@ -148,7 +154,7 @@ export function chipX(c: Column, i: number): number {
 
 /** First cgroup chip of the whole diagram — when the "cgroups" caption earns its place. */
 export const CHIPS_AT = Math.min(...columns.map(chipAt));
-export const PUNCH_AT = 17;
+export const PUNCH_AT = 14;
 
 /** Horizontal centre of the gutter. */
 export const CAPTION_X = GUTTER / 2;

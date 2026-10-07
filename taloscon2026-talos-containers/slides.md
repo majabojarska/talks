@@ -141,9 +141,9 @@ layout: two-cols-header
 ### Cons
 
 - **Baked into the OS image at build time**
+- Can't reconfigure without rebuild and upgrade
 - In-memory containerd snapshots
 - Always privileged — all grantable capabilities, all devices, host network
-- Can't reconfigure without rebuild and upgrade
 
 </div>
 
@@ -182,66 +182,125 @@ environment variables, for a service that is already baked in. It can't introduc
 -->
 
 ---
+layout: two-cols-header
 clicks: 4
----
-
-<TalosStack :from="12" />
-
 ---
 
 # Option 3: Talos Containers
 
+::left::
+
+
+- Talos 1.15 gets first class container support 
+
 <v-clicks>
 
-- Managed via `ContainerConfig` documents 
-- Introduced in Talos 1.14+, works out of the box
-- Runs on the **CRI containerd instance that is already there**, in its own `taloscontainers` namespace
-- Its own **cgroup root**, so it cannot starve Kubernetes or Talos itself
-- `restricted` by default: no capabilities, no devices, read-only rootfs and sysfs
+- No extra components required
+- Dedicated **cgroups**
+- Dedicated **namespace**
+- Managed via `ContainerConfig` documents
 
 </v-clicks>
 
-<!--
+::right::
 
-So this is the middle ground, and the design goal was explicitly to make it cheap.
+<TalosContainersStack />
 
-The namespace comment in the source says it well: its own namespace so these containers
-neither collide with Kubernetes pods nor depend on Kubernetes being configured. That second
-half is the point — this works on a node that has never been told what a cluster is.
+<style>
+/* The first bullet lives in its own list so it is on screen from the start. Two lists means two
+   list bottom margins, which opens a gap between bullet one and the clicked ones; the 10px each
+   li already carries is spacing enough. The column div belongs to the layout and so cannot be
+   named from a slide style — these rules match the lists, which are this slide's own markup. */
+ul {
+  margin-bottom: 0;
+}
+</style>
 
-Note the default flips relative to extension services: restricted, not privileged. You can
-ask for privileged, and you can add or drop individual capabilities, but you have to ask.
+---
+clicks: 1
+---
 
-They're deliberately not services. We didn't want `talosctl services` to become a dumping
-ground for user workloads. The familiar tools do work though — `talosctl containers`, `logs`,
-`stats` and `restart` all take `--namespace taloscontainers`, and so does `talosctl image list`.
+<TalosStack :from="12" />
 
-Caveat if you're presenting before GA: this targets v1.15, and some of the pieces landed
-after alpha.0. Check which release is current on the day.
-
--->
 
 ---
 
 # `ContainerConfig`
 
----
-layout: two-cols-header
+```yaml
+apiVersion: v1alpha1
+kind: ContainerConfig
+name: hello
+image: alpine
+entrypoint: ["/bin/sh", "-c"]
+args: ["echo 'Hello TalosCon!' && sleep infinity"]
+```
+
 ---
 
 # The full surface
 
+- Image overrides: `entrypoint`, `args`, `workingDir`, `environment`, `runAs`
+- `mounts`: `userVolume`, `tmpfs`, `hostPath`
+- `security` - `restricted` (default) / `privileged`, capability add/drop, `machinedAccess`
+- `network.mode`: `none` (default) or `host`
+- `resources.limits`: cgroup v2 `cpu.max` and `memory.max`
+- `dependsOn` — `paths`, `networks`, `clock`, `containers`
+
+<!--
+
+Six groups, one slide each from here. Nothing in the document is mandatory except the name and
+the image — everything that follows is an override on top of what the image already says.
+
+-->
+
+---
+layout: two-cols-header
+---
+
+# Image, overriding defaults
+
 ::left::
 
-- `mounts` — three typed sources only: `userVolume`, `tmpfs`, `hostPath`
-- `security` — `restricted` / `privileged`, plus capability add/drop
-- `network.mode` — `none` or `host`
-- `resources.limits` — cgroup v2 `cpu.max` and `memory.max`
-- `dependsOn` — paths, networks, clock, other containers
+- A non-digest `image` is accepted but emits a **warning**
+- `entrypoint`, `args`, `workingDir` override the image's `ENTRYPOINT`, `CMD` and `WORKDIR`
+- `runAs.uid` / `runAs.gid` override `USER`. 
+- `environment` has `KEY=value` items, merged over the image's own `ENV`
 
 ::right::
 
-<div style="--slidev-code-font-size: 12px; --slidev-code-line-height: 17px">
+<div style="--slidev-code-font-size: 13px; --slidev-code-line-height: 19px">
+
+```yaml
+image: docker.io/library/nginx:1.27
+entrypoint: ["/docker-entrypoint.sh"]
+args: ["nginx", "-g", "daemon off;"]
+workingDir: /the/front/fell/off
+runAs:
+  uid: 42
+  gid: 42
+environment:
+  - NGINX_PORT=8080
+```
+
+</div>
+
+---
+layout: two-cols-header
+---
+
+# `mounts`
+
+::left::
+
+- `userVolume` - by `UserVolumeConfig` name
+- `tmpfs` - scratch space; `size` optional, kernel default when empty
+- `hostPath` - bind-mount of a host path 
+- `options`: `ro`, `rw`, `noexec`, `nosuid`, `nodev`, `noatime`, `rbind`, `rshared` - writable unless you say otherwise
+
+::right::
+
+<div style="--slidev-code-font-size: 13px; --slidev-code-line-height: 19px">
 
 ```yaml
 mounts:
@@ -252,28 +311,134 @@ mounts:
   - tmpfs:
       destination: /tmp
       size: 64MiB
+  - hostPath:
+      source: /path/on/host
+      destination: /path/in/container
+      options: [ro, noexec]
+```
+
+</div>
+
+<!--
+
+Destinations have to be unique across the whole list — two mounts landing on the same path is a
+validation error, not a last-one-wins.
+
+-->
+
+---
+layout: two-cols-header
+---
+
+# `security`
+
+::left::
+
+- `restricted` is the **default**: no capabilities, no devices, read-only rootfs and sysfs
+- `privileged` grants all grantable capabilities and all devices 
+- `capabilities.{add,drop}` — names without the `CAP_` prefix.
+- `machinedAccess` publishes the container's PID and bind-mounts the `machined` API socket.
+
+::right::
+
+<div style="--slidev-code-font-size: 13px; --slidev-code-line-height: 19px">
+
+```yaml
 security:
   profile: restricted
+  capabilities:
+    add:
+      - NET_ADMIN
+      - NET_RAW
+  machinedAccess: false
+```
+
+</div>
+
+---
+layout: two-cols-header
+---
+
+# `network` and `resources`
+
+::left::
+
+`network.mode`
+
+- `none` is the **default**, just the container's own network namespace
+- `host` shares the host's network namespace
+
+`resources.limits` mapped onto cgroup v2 `cpu.max`, `memory.max`
+
+::right::
+
+<div style="--slidev-code-font-size: 13px; --slidev-code-line-height: 19px">
+
+```yaml
+network:
+  mode: host
 resources:
-  limits: { cpu: 1500m, memory: 512MiB }
+  limits:
+    cpu: 1500m
+    memory: 512MiB
+```
+
+</div>
+
+---
+layout: two-cols-header
+---
+
+# `dependsOn`
+
+::left::
+
+- `paths` - absolute host paths
+- `networks` - a closed set: `addresses`, `connectivity`, `hostname`, `etcfiles`
+- `time` - NTP sync
+- `containers` - other Talos Containers' readiness.
+
+::right::
+
+<div style="--slidev-code-font-size: 13px; --slidev-code-line-height: 19px">
+
+```yaml
 dependsOn:
-  networks: [addresses]
+  paths:
+    - /some/host/path
+    - /dev/foo
+  networks:
+    - addresses
+    - hostname
   time: true
+  containers:
+    - database
 ```
 
 </div>
 
 
 ---
+clicks: 5
+---
 
-# None of this is new
+# From config to running container
+
+<ReconcileChain />
+
+---
+
+
+# You already know most of this!
 
 <v-clicks>
 
-- Data lives in a **`UserVolumeConfig`** — the same volume machinery the rest of the node uses
-- The image comes through the **node's registry configuration** — mirrors, auth, TLS
-- Through the same **`ImageCacheConfig`**, so an air-gapped node stays air-gapped
-- Under the same **`ImageVerificationConfig`** — write a signature policy once, it covers these too
+- Persistence? `UserVolumeConfig`
+- DNS? `ResolverConfig`
+- Registry configuration? `RegistryTLSConfig`, `RegistryAuthConfig`, `RegistryMirrorConfig`
+- Image caching? `ImageCacheConfig`
+- Supports air-gapped infrastructure
+- Image signatures? `ImageVerificationConfig`
 
 </v-clicks>
 
@@ -284,73 +449,6 @@ internal helper that fetches the kubelet image, the etcd image and the installer
 everything already wired into that path applies here on day one, with nothing to opt into.
 
 The next two slides are the same four documents with the YAML attached.
-
--->
-
----
-layout: two-cols-header
----
-
-# Storage: `UserVolumeConfig`
-
-::left::
-
-```yaml
-apiVersion: v1alpha1
-kind: UserVolumeConfig
-name: app-data
-provisioning:
-  diskSelector:
-    match: disk.transport == "nvme"
-  maxSize: 50GiB
-filesystem:
-  type: xfs
-encryption:
-  provider: luks2
-  keys:
-    - slot: 0
-      tpm: {}
-```
-
-::right::
-
-```yaml
-apiVersion: v1alpha1
-kind: ContainerConfig
-name: app
-image: example.com/org/app:1.2.3
-mounts:
-  - userVolume:
-      name: app-data
-      destination: /var/lib/app
-```
-
-<style>
-.tc-content h1 {
-  margin-bottom: 16px;
-}
-.slidev-code {
-  --slidev-code-padding: 6px 16px;
-  padding: 6px 16px;
-}
-</style>
-
-<!--
-
-This is the `omni-data` volume the demo mounts, so this slide is also the setup for it.
-
-Nothing on the left is specific to containers. Encrypted, TPM-sealed, provisioned onto an NVMe
-disk by a CEL selector — that is just what user volumes already do, and a container referencing
-one inherits all of it. `volumeType` is omitted here because partition is the default.
-
-The ordering is the part worth saying out loud: declaring the mount is also declaring the
-dependency. The container does not start until the volume is mounted, and once it is running the
-volume can't be unmounted out from under it — the controller holds a finalizer for exactly that.
-
-One real limitation if it comes up: `userVolume` resolves `UserVolumeConfig` names only. An
-`ExistingVolumeConfig`, an `ExternalVolumeConfig` — NFS or virtiofs — or a `RawVolumeConfig`
-can't be named here. You can reach them through `hostPath` once they're mounted on the host, but
-you give up the ordering guarantee when you do.
 
 -->
 
@@ -427,23 +525,14 @@ This is a COSI controller chain like everything else in Talos — nothing bespok
 
 -->
 
----
-clicks: 5
----
-
-# From document to running container
-
-<ReconcileChain />
-
-
----
+<!-----
 clicks: 5
 ---
 
 # Container replacement
 
 <ContainerLifecycle />
-
+-->
 ---
 layout: section
 ---
@@ -460,7 +549,7 @@ contacts:
     slack: taloscommunity.slack.com
 ---
 
-# Containers on Talos. <br>No K8s required. 
+# Talos Containers. <br>Batteries included.
 
 <!--
 
