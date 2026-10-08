@@ -32,8 +32,8 @@ const rows = { config: 2, spec: 52, fan: 125, bus: 187, instance: 205, running: 
 // by a controller of their own, and their verdict is an output of that step rather than an input to
 // it.
 const fan = [
-  { x: 130, type: 'ContainerImageStatus', note: 'containers.ImageController · digest' },
-  { x: 470, type: 'ContainerMountStatus', note: 'containers.MountController' },
+  { x: 130, type: 'ContainerImageStatus' },
+  { x: 470, type: 'ContainerMountStatus' },
 ]
 const FAN_W = 280
 
@@ -130,8 +130,7 @@ const ISTATUS_JOIN = CX + 60
         />
         <g v-for="f in fan" :key="`box-${f.type}`">
           <rect :x="f.x" :y="rows.fan" :width="FAN_W" :height="BOX_H" rx="6" class="rc-res" />
-          <text :x="fanCx(f.x)" :y="rows.fan + 20" text-anchor="middle" class="rc-res-label">{{ f.type }}</text>
-          <text :x="fanCx(f.x)" :y="rows.fan + 37" text-anchor="middle" class="rc-note">{{ f.note }}</text>
+          <text :x="fanCx(f.x)" :y="rows.fan + BOX_H / 2 + 5" text-anchor="middle" class="rc-res-label">{{ f.type }}</text>
         </g>
       </g>
 
@@ -144,12 +143,10 @@ const ISTATUS_JOIN = CX + 60
         <text :x="fanCx(fan[fan.length - 1].x) + 20" :y="rows.bus - 6" class="rc-ctrl">containers.InstanceController</text>
 
         <rect :x="DEP_X" :y="rows.instance" :width="DEP_W" :height="BOX_H" rx="6" class="rc-res" />
-        <text :x="DEP_CX" :y="rows.instance + 20" text-anchor="middle" class="rc-res-label">ContainerDependencyStatus</text>
-        <text :x="DEP_CX" :y="rows.instance + 37" text-anchor="middle" class="rc-note">reports gates: image, mounts, dependsOn</text>
+        <text :x="DEP_CX" :y="rows.instance + BOX_H / 2 + 5" text-anchor="middle" class="rc-res-label">ContainerDependencyStatus</text>
 
         <rect :x="INST_X" :y="rows.instance" :width="INST_W" :height="BOX_H" rx="6" class="rc-res" />
-        <text :x="CX" :y="rows.instance + 20" text-anchor="middle" class="rc-res-label">ContainerInstanceSpec</text>
-        <text :x="CX" :y="rows.instance + 37" text-anchor="middle" class="rc-note">represents single execution</text>
+        <text :x="CX" :y="rows.instance + BOX_H / 2 + 5" text-anchor="middle" class="rc-res-label">ContainerInstanceSpec</text>
       </g>
 
       <!-- RuntimeController -> the container actually running. -->
@@ -166,8 +163,7 @@ const ISTATUS_JOIN = CX + 60
           class="rc-link" marker-end="url(#rc-head)"
         />
         <rect :x="ISTATUS_X" :y="rows.running" :width="ISTATUS_W" :height="RUN_H" rx="6" class="rc-res" />
-        <text :x="ISTATUS_CX" :y="rows.running + 18" text-anchor="middle" class="rc-res-label">ContainerInstanceStatus</text>
-        <text :x="ISTATUS_CX" :y="rows.running + 33" text-anchor="middle" class="rc-note">phase, PID, exit code</text>
+        <text :x="ISTATUS_CX" :y="rows.running + RUN_H / 2 + 5" text-anchor="middle" class="rc-res-label">ContainerInstanceStatus</text>
       </g>
 
       <!-- StatusController -> what you can read back. -->
