@@ -72,7 +72,7 @@ Senior Software Engineer @ Sidero Labs
 
 
 ---
-clicks: 12
+clicks: 2
 ---
 
 <TalosStack />
@@ -220,7 +220,7 @@ ul {
 clicks: 1
 ---
 
-<TalosStack :from="12" />
+<TalosStack :from="2" />
 
 
 ---
@@ -245,7 +245,7 @@ args: ["echo 'Hello TalosCon!' && sleep infinity"]
 - `security` - `restricted` (default) / `privileged`, capability add/drop, `machinedAccess`
 - `network.mode`: `none` (default) or `host`
 - `resources.limits`: cgroup v2 `cpu.max` and `memory.max`
-- `dependsOn` — `paths`, `networks`, `clock`, `containers`
+- `dependsOn` — `paths`, `networks`, `time`, `containers`
 
 <!--
 
@@ -441,6 +441,15 @@ clicks: 5
 - Image signatures? `ImageVerificationConfig`
 
 </v-clicks>
+
+<style>
+/* Document names are long enough to wrap, and an inline code chip is taller than the text it
+   sits in, so the theme's 1.15 line-height lets a wrapped line collide with the one above it. */
+li {
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+</style>
 
 <!--
 

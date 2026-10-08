@@ -5,14 +5,13 @@
 // CRI instance, in their own namespace — which is the point the diagram has to make, so the
 // two daemons are drawn as separate bands and the namespace columns sit over the right one.
 //
-// One schedule, two slides. The click numbers below run unbroken from 0 to 13, but the deck cuts
-// them after the `system` column's cgroup roots (click 12): the first slide builds the stack as
-// it exists today, then Options 1 and 2 argue the case for a third namespace, and a second mount
-// of TalosStack resumes at click 12 (its `from` prop) to reveal `taloscontainers`.
+// One schedule, two slides, one click per vertical. The click numbers below run unbroken from 0
+// to 3, but the deck cuts them after the `system` vertical (click 2): the first slide builds the
+// stack as it exists today, then Options 1 and 2 argue the case for a third namespace, and a
+// second mount of TalosStack resumes at click 2 (its `from` prop) to reveal `taloscontainers`.
 //
-// That reveal is a single click. The two existing namespaces are built a piece at a time because
-// the audience is being taught where the pieces live; `taloscontainers` is the answer the talk
-// has been withholding, so it arrives whole — see `atOnce` below.
+// A vertical is one idea — a containerd instance, the namespace on it, what runs there and the
+// cgroup roots underneath — so each arrives whole rather than a box at a time.
 
 export const W = 880;
 
@@ -43,6 +42,8 @@ export const CONTAINERD_Y = 252;
 export const CONTAINERD_H = 42;
 export const KERNEL_Y = 302;
 export const KERNEL_H = 36;
+/** The kernel lands with the first vertical; nothing is on screen before it. */
+export const KERNEL_AT = 1;
 export const PUNCH_Y = 352;
 
 // Item boxes inside a column.
@@ -62,10 +63,8 @@ export interface Column {
   /** cgroup roots backing it; several are drawn side by side across the column. */
   cgroup: string[];
   color: string;
-  /** Click index at which the namespace box appears; items and note follow, one click each. */
+  /** Click index at which the whole column — box, items, note and cgroup roots — appears. */
   at: number;
-  /** Reveal the whole column — items, note and cgroup roots — on `at`, as one step. */
-  atOnce?: boolean;
 }
 
 export const columns: Column[] = [
@@ -77,7 +76,7 @@ export const columns: Column[] = [
     note: ["Baked into the OS", "In-memory"],
     cgroup: ["system/*"],
     color: "#723a8b", // --tc-purple
-    at: 8,
+    at: 2,
   },
   {
     ns: "k8s.io",
@@ -87,7 +86,7 @@ export const columns: Column[] = [
     note: ["Deployed via kube-apiserver", "or as static Pods"],
     cgroup: ["kubepods", "podruntime/*"],
     color: "#074c94", // --tc-blue
-    at: 2,
+    at: 1,
   },
   {
     ns: "taloscontainers",
@@ -97,8 +96,7 @@ export const columns: Column[] = [
     note: ["Pulled at runtime", "Dynamic"],
     cgroup: ["taloscontainers/<id>"],
     color: "#e92582", // --tc-pink
-    at: 13,
-    atOnce: true,
+    at: 3,
   },
 ];
 
@@ -108,7 +106,7 @@ export const daemons = [
     label: "containerd (system)",
     x: SYSTEM_X,
     w: SYSTEM_W,
-    at: 7,
+    at: 2,
     accent: false,
   },
   { label: "containerd (CRI)", x: CRI_X, w: CRI_W, at: 1, accent: true },
@@ -124,19 +122,22 @@ export function noteY(itemCount: number, k: number): number {
   return itemY(itemCount) + 14 + k * 15;
 }
 
-/** Click at which item j of a column appears. */
-export function itemAt(c: Column, j: number): number {
-  return c.atOnce ? c.at : c.at + 1 + j;
+// A column's parts all land on its own click. These three names stay because the template reads
+// better for having them, and because CHIPS_AT is derived from the last of them.
+
+/** Click at which a column's items appear. */
+export function itemAt(c: Column): number {
+  return c.at;
 }
 
-/** Click at which a column's note appears, after its last item. */
+/** Click at which a column's note appears. */
 export function noteAt(c: Column): number {
-  return c.atOnce ? c.at : c.at + 1 + c.items.length;
+  return c.at;
 }
 
-/** Click at which a column's cgroup chips appear, one step after its note. */
+/** Click at which a column's cgroup chips appear. */
 export function chipAt(c: Column): number {
-  return c.atOnce ? c.at : noteAt(c) + 1;
+  return c.at;
 }
 
 /** Gap between two cgroup chips sharing one column. */
@@ -154,7 +155,7 @@ export function chipX(c: Column, i: number): number {
 
 /** First cgroup chip of the whole diagram — when the "cgroups" caption earns its place. */
 export const CHIPS_AT = Math.min(...columns.map(chipAt));
-export const PUNCH_AT = 14;
+export const PUNCH_AT = 4;
 
 /** Horizontal centre of the gutter. */
 export const CAPTION_X = GUTTER / 2;
@@ -164,7 +165,7 @@ export const CAPTION_X = GUTTER / 2;
  * labels, so a caption cannot drift out of alignment when the row moves.
  */
 export const captions = [
-  // Appears with the first namespace box (k8s.io, click 2).
-  { label: "namespaces", y: COL_Y + COL_H / 2, at: 2 },
+  // Appears with the first namespace box (k8s.io, click 1).
+  { label: "namespaces", y: COL_Y + COL_H / 2, at: 1 },
   { label: "cgroups", y: CHIP_Y + CHIP_H / 2, at: CHIPS_AT },
 ];

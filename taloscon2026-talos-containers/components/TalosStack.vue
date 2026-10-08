@@ -14,6 +14,7 @@ import {
   CONTENT_W,
   GUTTER,
   ITEM_H,
+  KERNEL_AT,
   KERNEL_H,
   KERNEL_Y,
   PUNCH_Y,
@@ -36,20 +37,16 @@ import {
 // is at or below `from` mounts with its `on` class already set, so it is simply there on arrival
 // rather than fading in again.
 //
-// Slide one  — `clicks: 12`, no `from`      — steps 0-12: the stack as it exists today.
-// Slide two  — `clicks: 1`, `:from="12"`    — step 13: taloscontainers, whole, after Options 1
-//                                             and 2 have made the case for it.
+// Slide one  — `clicks: 2`, no `from`       — steps 1-2: the stack as it exists today.
+// Slide two  — `clicks: 1`, `:from="2"`     — step 3: taloscontainers, after Options 1 and 2 have
+//                                             made the case for it.
 //
-// Each namespace is finished off by its own cgroup roots before the next one starts.
-//   0      the Linux kernel
-//   1      the CRI containerd instance
-//   2-5    k8s.io: box, kubelet, pods, note
-//   6      k8s.io cgroup roots (and the "cgroups" caption, the first of the row)
-//   7      the system containerd instance
-//   8-11   system: box, two items, note
-//   12     system cgroup roots                        <- slide one ends here
-//   13     taloscontainers, all of it: box, item, note and cgroup root (the column is `atOnce`)
-//   14     punchline
+// One click per vertical: a containerd instance, the namespace sitting on it, what runs there and
+// the cgroup roots underneath all arrive together.
+//   1   the Linux kernel, containerd (CRI), the whole k8s.io column and both gutter captions
+//   2   containerd (system) and the whole system column
+//   3   the whole taloscontainers column            <- slide two
+//   4   punchline
 const props = withDefaults(defineProps<{ from?: number }>(), { from: 0 })
 
 const { $clicks } = useSlideContext()
@@ -60,7 +57,7 @@ const s = computed(() => props.from + $clicks.value)
   <div class="ts">
     <svg class="ts-svg" :viewBox="`-4 0 ${W + 8} 356`" aria-label="Talos container stack: kernel, two containerd instances, and their namespaces">
       <!-- The one band everything sits on. -->
-      <g class="ts-band on">
+      <g class="ts-band" :class="{ on: s >= KERNEL_AT }">
         <rect :x="GUTTER" :y="KERNEL_Y" :width="CONTENT_W" :height="KERNEL_H" :rx="R" class="ts-kernel" />
         <text :x="GUTTER + CONTENT_W / 2" :y="KERNEL_Y + KERNEL_H / 2 + 5" text-anchor="middle" class="ts-band-label">Linux kernel</text>
       </g>
@@ -86,7 +83,7 @@ const s = computed(() => props.from + $clicks.value)
           {{ c.ns }}
         </text>
 
-        <g v-for="(item, j) in c.items" :key="item" class="ts-reveal" :class="{ on: s >= itemAt(c, j) }">
+        <g v-for="(item, j) in c.items" :key="item" class="ts-reveal" :class="{ on: s >= itemAt(c) }">
           <rect
             :x="c.x + 16" :y="itemY(j)" :width="c.w - 32" :height="ITEM_H" :rx="R"
             class="ts-item" :style="{ stroke: c.color }"
