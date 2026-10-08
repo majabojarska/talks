@@ -238,7 +238,7 @@ args: ["echo 'Hello TalosCon!' && sleep infinity"]
 
 ---
 
-# The full surface
+# Current API surface 
 
 - Image overrides: `entrypoint`, `args`, `workingDir`, `environment`, `runAs`
 - `mounts`: `userVolume`, `tmpfs`, `hostPath`
@@ -253,6 +253,101 @@ Six groups, one slide each from here. Nothing in the document is mandatory excep
 the image — everything that follows is an override on top of what the image already says.
 
 -->
+
+
+---
+clicks: 5
+---
+
+# From config to running container
+
+<ReconcileChain />
+
+---
+
+
+# You already know most of this!
+
+<v-clicks>
+
+- Persistence? `UserVolumeConfig`
+- DNS? `ResolverConfig`
+- Registry configuration? `RegistryTLSConfig`, `RegistryAuthConfig`, `RegistryMirrorConfig`
+- Image caching? `ImageCacheConfig`
+- Supports air-gapped infrastructure
+- Image signatures? `ImageVerificationConfig`
+
+</v-clicks>
+
+<style>
+/* Document names are long enough to wrap, and an inline code chip is taller than the text it
+   sits in, so the theme's 1.15 line-height lets a wrapped line collide with the one above it. */
+li {
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+</style>
+
+<!--
+
+`ContainerConfig` adds one document, not a subsystem. The image pull goes through the same
+internal helper that fetches the kubelet image, the etcd image and the installer image, so
+everything already wired into that path applies here on day one, with nothing to opt into.
+
+The next two slides are the same four documents with the YAML attached.
+
+-->
+
+
+
+<!--
+
+Three documents, none of them written for this feature, all of them in force for it.
+
+The cache one is the nicest of the three: when the image cache is ready Talos prepends registryd
+as the first mirror endpoint for every registry, so a cached image is served locally and an
+air-gapped node stays air-gapped — the container config says nothing about any of this.
+
+Verification happens before the pull starts, not after. If a rule matches and the signature
+checks out, the pull is redirected to the digest, so what runs is exactly what was verified. If
+the rule denies, that's terminal — no retry, and the container never starts.
+
+Two details if asked. Patterns match on registry and repository only, against the normalized
+reference, so `docker.io/library/nginx*` matches `nginx:latest` while `library/nginx*` matches
+nothing. And the honest scope caveat: this covers Talos' own pulls — kubelet, etcd, installer,
+Talos Containers. Images that kubelet pulls through CRI for Kubernetes pods go around it.
+
+Now the part I find most interesting: what Talos does with that document.
+This is a COSI controller chain like everything else in Talos — nothing bespoke.
+
+-->
+
+<!-----
+clicks: 5
+---
+
+# Container replacement
+
+<ContainerLifecycle />
+-->
+---
+layout: section
+---
+
+# Live demo
+
+
+---
+layout: end
+contacts:
+  - name: Maja Bojarska
+    role: Senior Software Engineer @ Sidero Labs
+    email: maja.bojarska@siderolabs.com
+    slack: taloscommunity.slack.com
+---
+
+# Talos Containers. <br>Batteries included.
+
 
 ---
 layout: two-cols-header
@@ -418,98 +513,6 @@ dependsOn:
 </div>
 
 
----
-clicks: 5
----
-
-# From config to running container
-
-<ReconcileChain />
-
----
-
-
-# You already know most of this!
-
-<v-clicks>
-
-- Persistence? `UserVolumeConfig`
-- DNS? `ResolverConfig`
-- Registry configuration? `RegistryTLSConfig`, `RegistryAuthConfig`, `RegistryMirrorConfig`
-- Image caching? `ImageCacheConfig`
-- Supports air-gapped infrastructure
-- Image signatures? `ImageVerificationConfig`
-
-</v-clicks>
-
-<style>
-/* Document names are long enough to wrap, and an inline code chip is taller than the text it
-   sits in, so the theme's 1.15 line-height lets a wrapped line collide with the one above it. */
-li {
-  line-height: 1.5;
-  margin-bottom: 14px;
-}
-</style>
-
-<!--
-
-`ContainerConfig` adds one document, not a subsystem. The image pull goes through the same
-internal helper that fetches the kubelet image, the etcd image and the installer image, so
-everything already wired into that path applies here on day one, with nothing to opt into.
-
-The next two slides are the same four documents with the YAML attached.
-
--->
-
-
-
-<!--
-
-Three documents, none of them written for this feature, all of them in force for it.
-
-The cache one is the nicest of the three: when the image cache is ready Talos prepends registryd
-as the first mirror endpoint for every registry, so a cached image is served locally and an
-air-gapped node stays air-gapped — the container config says nothing about any of this.
-
-Verification happens before the pull starts, not after. If a rule matches and the signature
-checks out, the pull is redirected to the digest, so what runs is exactly what was verified. If
-the rule denies, that's terminal — no retry, and the container never starts.
-
-Two details if asked. Patterns match on registry and repository only, against the normalized
-reference, so `docker.io/library/nginx*` matches `nginx:latest` while `library/nginx*` matches
-nothing. And the honest scope caveat: this covers Talos' own pulls — kubelet, etcd, installer,
-Talos Containers. Images that kubelet pulls through CRI for Kubernetes pods go around it.
-
-Now the part I find most interesting: what Talos does with that document.
-This is a COSI controller chain like everything else in Talos — nothing bespoke.
-
--->
-
-<!-----
-clicks: 5
----
-
-# Container replacement
-
-<ContainerLifecycle />
--->
----
-layout: section
----
-
-# Live demo
-
-
----
-layout: end
-contacts:
-  - name: Maja Bojarska
-    role: Senior Software Engineer @ Sidero Labs
-    email: maja.bojarska@siderolabs.com
-    slack: taloscommunity.slack.com
----
-
-# Talos Containers. <br>Batteries included.
 
 <!--
 
