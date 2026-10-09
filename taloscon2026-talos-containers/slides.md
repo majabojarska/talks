@@ -264,6 +264,36 @@ clicks: 5
 <ReconcileChain />
 
 ---
+clicks: 6
+---
+
+# The same loop, minus the cluster
+
+<ReconcileCompare />
+
+<!--
+
+The shape is deliberately the same: declared desired state, level-triggered controllers, each
+owning one output, status flowing back as its own resource. Nobody imperatively runs a container
+on either side.
+
+Three real differences if they come up.
+
+The ladder means different things. Deployment to ReplicaSet to Pod exists to fan out N replicas
+over M nodes. Ours is the same container at three stages of resolution — there are no replicas to
+count.
+
+The transport. Kubernetes crosses a network and a datastore: API server, etcd, watch streams,
+leader-elected controllers. This chain is in-process in machined, COSI state in memory. No quorum,
+no leader election, no network hop between any two boxes on the previous slide.
+
+And the failure behaviour. kubelet backs off exponentially and parks in CrashLoopBackOff; we wait
+a flat five seconds and start the next generation, forever. A Deployment rolls a new ReplicaSet in
+and the old one out; we stop one instance and start one instance, because there is only ever one.
+
+-->
+
+---
 
 
 # You already know most of this!
