@@ -1,0 +1,62 @@
+name: Pages
+
+# Builds every deck on every push as a breakage check; only main publishes,
+# because GitHub Pages serves a single site per repository.
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # slidev build never uses Playwright (export-only), so skip the ~150MB browser.
+  PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          # @slidev/cli requires >=22.12.0 and the repo pins no Node version.
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build site
+        env:
+          # Derived, not hardcoded, so forks and renames stay correct.
+          PAGES_BASE: /${{ github.event.repository.name }}/
+        run: npm run build:site
+
+      - uses: actions/upload-pages-artifact@v5
+        if: github.ref == 'refs/heads/main'
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    concurrency:
+      # Never cancel a half-finished deployment.
+      group: pages
+      cancel-in-progress: false
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
