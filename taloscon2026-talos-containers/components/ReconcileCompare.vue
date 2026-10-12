@@ -67,17 +67,17 @@ const stages: Stage[] = [
   {
     caption: 'prepare',
     k8s: ['kubelet admission, CRI pulls'],
-    talos: ['Image and Mount controllers'],
+    talos: ['Image & Mount controllers, dependsOn'],
   },
   {
     caption: 'run',
-    k8s: ['containerd, k8s.io'],
-    talos: ['containerd, taloscontainers'],
+    k8s: ['containerd -> k8s.io'],
+    talos: ['containerd -> taloscontainers'],
   },
   {
     caption: 'report',
-    k8s: ['Pod.status, aggregated up'],
-    talos: ['ContainerStatus, folded from two'],
+    k8s: ['Pod.status, Deployment.status, etc.'],
+    talos: ['ContainerStatus'],
   },
 ]
 
