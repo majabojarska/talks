@@ -268,6 +268,26 @@ layout: section
 
 
 ---
+
+
+<img
+  src="/omni-home.png"
+  alt="The Omni web UI home page: 9 healthy clusters and 75 machines"
+  class="omni-shot"
+/>
+
+<style>
+.omni-shot {
+  display: block;
+  height: 93%;
+  width: auto;
+  margin: 0 auto;
+  border-radius: 6px;
+  border: 1px solid var(--tc-muted);
+}
+</style>
+
+---
 layout: end
 contacts:
   - name: Maja Bojarska
