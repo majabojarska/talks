@@ -222,7 +222,7 @@ args: ["echo 'Hello TalosCon!' && sleep infinity"]
 - `security` - `restricted` (default) / `privileged`, capability add/drop, `machinedAccess`
 - `network.mode`: `none` (default) or `host`
 - `resources.limits`: cgroup v2 `cpu.max` and `memory.max`
-- `dependsOn` — `paths`, `networks`, `time`, `containers`
+- `dependsOn` - `paths`, `networks`, `time`, `containers`
 
 
 
