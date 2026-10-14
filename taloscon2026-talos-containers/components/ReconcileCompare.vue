@@ -55,7 +55,7 @@ const stages: Stage[] = [
   },
   {
     caption: 'expand',
-    k8s: ['Deployment, ReplicaSet, Pod'],
+    k8s: ['ReplicaSet, Pod'],
     talos: ['ContainerSpec, ContainerInstanceSpec'],
   },
   {

@@ -86,8 +86,8 @@ layout: two-cols-header
 ### Pros
 
 - The Kubernetes ecosystem
-- Portability
-- Health probes, rollbacks
+- Portability 
+- Powerful orchestration capabilities
 - Granular access control
 
 </div>
@@ -98,7 +98,7 @@ layout: two-cols-header
 
 ### Cons
 
-- The usual challenges of K8s operations
+- Operational overhead
 - Resource consumption (~400MB)
 - Overkill for simple, non-HA deployments
 
@@ -160,18 +160,16 @@ layout: two-cols-header
 
 ---
 layout: two-cols-header
-clicks: 4
+clicks: 5
 ---
 
 # Option 3: Talos Containers
 
 ::left::
 
-
-- Talos 1.14 gets first class container support 
-
 <v-clicks>
 
+- Talos 1.15 gets first class container support
 - No extra components required
 - Dedicated **cgroups**
 - Dedicated **namespace**
@@ -181,17 +179,7 @@ clicks: 4
 
 ::right::
 
-<TalosContainersStack />
-
-<style>
-/* The first bullet lives in its own list so it is on screen from the start. Two lists means two
-   list bottom margins, which opens a gap between bullet one and the clicked ones; the 10px each
-   li already carries is spacing enough. The column div belongs to the layout and so cannot be
-   named from a slide style — these rules match the lists, which are this slide's own markup. */
-ul {
-  margin-bottom: 0;
-}
-</style>
+<TalosContainersStack :from="1" />
 
 ---
 clicks: 1
@@ -218,7 +206,7 @@ args: ["echo 'Hello TalosCon!' && sleep infinity"]
 # Current API surface 
 
 - Image overrides: `entrypoint`, `args`, `workingDir`, `environment`, `runAs`
-- `mounts`: `userVolume`, `tmpfs`, `hostPath`
+- `mounts`: `volume`, `tmpfs`, `hostPath`
 - `security` - `restricted` (default) / `privileged`, capability add/drop, `machinedAccess`
 - `network.mode`: `none` (default) or `host`
 - `resources.limits`: cgroup v2 `cpu.max` and `memory.max`
@@ -242,7 +230,7 @@ clicks: 6
 
 <v-clicks>
 
-- Persistence? `UserVolumeConfig`
+- Persistence? `UserVolumeConfig`, `ExistingVolumeConfig`, `ExternalVolumeConfig`.
 - DNS? `ResolverConfig`
 - Registry configuration? `RegistryTLSConfig`, `RegistryAuthConfig`, `RegistryMirrorConfig`
 - Image caching? `ImageCacheConfig`
@@ -255,7 +243,7 @@ clicks: 6
 /* Document names are long enough to wrap, and an inline code chip is taller than the text it
    sits in, so the theme's 1.15 line-height lets a wrapped line collide with the one above it. */
 li {
-  line-height: 1.5;
+  line-height: 1.3;
   margin-bottom: 14px;
 }
 </style>
@@ -264,8 +252,7 @@ li {
 layout: section
 ---
 
-# Live demo
-
+# Running Omni 
 
 ---
 
