@@ -169,7 +169,7 @@ clicks: 5
 
 <v-clicks>
 
-- Talos 1.15 gets first class container support
+- Talos 1.14 gets first class container support
 - No extra components required
 - Dedicated **cgroups**
 - Dedicated **namespace**
