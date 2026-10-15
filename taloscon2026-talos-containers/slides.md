@@ -210,7 +210,7 @@ args: ["echo 'Hello TalosCon!' && sleep infinity"]
 - `security` - `restricted` (default) / `privileged`, capability add/drop, `machinedAccess`
 - `network.mode`: `none` (default) or `host`
 - `resources.limits`: cgroup v2 `cpu.max` and `memory.max`
-- `dependsOn` - `paths`, `networks`, `time`, `containers`
+- `dependsOn` - `paths`, `network: ...`, `time`, `containers`
 
 
 
@@ -230,7 +230,7 @@ clicks: 6
 
 <v-clicks>
 
-- Persistence? `UserVolumeConfig`, `ExistingVolumeConfig`, `ExternalVolumeConfig`.
+- Persistence? `UserVolumeConfig`, `ExistingVolumeConfig`, `ExternalVolumeConfig`
 - DNS? `ResolverConfig`
 - Registry configuration? `RegistryTLSConfig`, `RegistryAuthConfig`, `RegistryMirrorConfig`
 - Image caching? `ImageCacheConfig`
@@ -248,11 +248,6 @@ li {
 }
 </style>
 
----
-layout: section
----
-
-# Running Omni 
 
 ---
 
@@ -420,7 +415,7 @@ layout: two-cols-header
 ::left::
 
 - `paths` - absolute host paths
-- `networks` - a closed set: `addresses`, `connectivity`, `hostname`, `etcfiles`
+- `network` - a closed set: `addresses`, `connectivity`, `hostname`, `etcfiles`
 - `time` - NTP sync
 - `containers` - other Talos Containers' readiness.
 
@@ -433,7 +428,7 @@ dependsOn:
   paths:
     - /some/host/path
     - /dev/foo
-  networks:
+  network:
     - addresses
     - hostname
   time: true
